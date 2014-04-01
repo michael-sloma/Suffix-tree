@@ -54,41 +54,46 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
   int remainder = 1;
 // -- main loop of algorithm -- 
   for(unsigned int i=1;i<text.length()-1;i++){
-    if(suffix_already_exists(i)){//implicitly update tree
+    if(suffix_already_exists(i)){
+      remainder += 1;
       if(a.active_edge==0) a.active_edge = i;
       a.active_length += 1;
-      remainder += 1;
+      canonize();
+      continue;
     }
-    else if(remainder>1){
-      int last_insert=0;
-      int this_insert=0;
-      bool first=true;
-      while(remainder>1){
-        last_insert = this_insert;
-        this_insert = split_edge(nodes[a.active_node].edges.at(text[a.active_edge]),a.active_length,i);
-        if(a.active_node==0 && a.active_length>0){//rule 1
+    int last_inserted = -1;
+    while(!suffix_already_exists(i)){
+      if(a.active_edge==0){
+        add_leaf_node(i);
+      }
+      else{
+        last_inserted = split_edge(active_edge(),
+                                   active_edge().start_index+a.active_length,
+                                   i);
+        if(a.active_node==0 && a.active_length > 0){//rule 1
           a.active_length -= 1;
-          a.active_edge += 1;
+          if (a.active_length == 0) a.active_edge = 0;
+          else a.active_edge += 1;
         }
-        if(!first){//rule 2
-          nodes[this_insert].suffix_link = last_insert;
+        if(a.active_node != 0 && last_inserted!=-1){//rule 2
+          nodes[last_inserted].suffix_link = a.active_node;
         }
         if(a.active_node != 0){//rule 3
-          a.active_node = nodes[a.active_node].suffix_link;
+          a.active_node = active_node().suffix_link==-1?0:active_node().suffix_link;
+          canonize();
         }
-        remainder -= 1;
-        first = false;
       }
     }
-    else if (remainder == 1){  
-      add_leaf_node(i);
-    }  
   }//end main loop
 #else
   naive_construction();
 #endif
 }
 
+bool suffix_tree::suffix_is_implicit(int position)
+{
+
+}
 
 void suffix_tree::show()
 {
@@ -132,11 +137,11 @@ int suffix_tree::split_edge(edge& e,int position_to_split,int current_position)
   edge old_edge = e;
   //edit the edge to be split to go from active node to new internal node
   e.destination_node = nodes.size()-1;
-  e.end_index = position_to_split;
+  e.end_index = position_to_split-1;
   //add an edge from the internal node to the orphan leaf node
   nodes[nodes.size()-1].edges.insert(std::make_pair(
                                       text[position_to_split],
-                                      edge(position_to_split+1,old_edge.end_index,
+                                      edge(position_to_split,old_edge.end_index,
                                            nodes.size()-1,old_edge.destination_node)));
   //add a new leaf node to the internal node representing the repeated character
   nodes.push_back(node());
@@ -151,7 +156,7 @@ int suffix_tree::split_edge(edge& e,int position_to_split,int current_position)
 }
 
 edge& suffix_tree::active_edge(){
-  return nodes[a.active_node].edges.at(a.active_edge);
+  return nodes[a.active_node].edges.at(text[a.active_edge]);
 }
 node& suffix_tree::active_node(){
   return nodes[a.active_node];
@@ -167,13 +172,16 @@ char suffix_tree::active_point_character()//character immediately AFTER the acti
 
 void suffix_tree::canonize()
 {
-  while(active_edge().start_index+a.active_length > active_edge().end_index){//maybe should be >=
+  if (a.active_edge==0)return;
+  int end = active_edge().end_index==CURRENT_END?text.size()-1:active_edge().end_index;
+  while(active_edge().start_index+a.active_length > end){//maybe should be >=
     int increment = active_edge().end_index - active_edge().start_index+1;
     a.active_node = active_edge().destination_node;
     a.active_length -= increment;
     if(a.active_length>0) a.active_edge += increment;
     else a.active_edge = 0;
     assert(a.active_edge >= 0);
+    end = active_edge().end_index==CURRENT_END?text.size()-1:active_edge().end_index;
   }
 }
 
