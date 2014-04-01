@@ -62,26 +62,31 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
       continue;
     }
     int last_inserted = -1;
+    int new_inserted = -1;
+    bool first = true;
     while(!suffix_already_exists(i)){
       if(a.active_edge==0){
         add_leaf_node(i);
       }
       else{
-        last_inserted = split_edge(active_edge(),
+        last_inserted = new_inserted;
+        new_inserted = split_edge(active_edge(),
                                    active_edge().start_index+a.active_length,
                                    i);
+        if(!first){ //rule 2
+          nodes[last_inserted].suffix_link = new_inserted;
+          cout<<"Setting suffix link of node "<<last_inserted<<" to "<<new_inserted<<std::endl;
+        }
         if(a.active_node==0 && a.active_length > 0){//rule 1
           a.active_length -= 1;
           if (a.active_length == 0) a.active_edge = 0;
           else a.active_edge += 1;
         }
-        if(a.active_node != 0 && last_inserted!=-1){//rule 2
-          nodes[last_inserted].suffix_link = a.active_node;
-        }
         if(a.active_node != 0){//rule 3
           a.active_node = active_node().suffix_link==-1?0:active_node().suffix_link;
           canonize();
         }
+        first = false;
       }
     }
   }//end main loop
@@ -92,14 +97,16 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
 
 bool suffix_tree::suffix_is_implicit(int position)
 {
-
+ return false;
 }
 
 void suffix_tree::show()
 {
   for(unsigned int i=0;i<nodes.size();i++){
     if(!nodes[i].edges.empty()){ 
-      cout<<"node "<<i<<std::endl;
+      cout<<"node "<<i;
+      if(nodes[i].suffix_link != -1) cout <<" - - - "<<nodes[i].suffix_link;
+      cout<<std::endl;
       for (auto it=nodes[i].edges.begin();it!=nodes[i].edges.end();++it){
         int start = it->second.start_index;
         int end = it->second.end_index;
@@ -173,21 +180,25 @@ char suffix_tree::active_point_character()//character immediately AFTER the acti
 void suffix_tree::canonize()
 {
   if (a.active_edge==0)return;
-  int end = active_edge().end_index==CURRENT_END?text.size()-1:active_edge().end_index;
-  while(active_edge().start_index+a.active_length > end){//maybe should be >=
+  if (active_edge().end_index == CURRENT_END) return;
+  while(active_edge().start_index+a.active_length > active_edge().end_index){//maybe should be >=
+    cout<<"we canonized something!\n";
     int increment = active_edge().end_index - active_edge().start_index+1;
     a.active_node = active_edge().destination_node;
     a.active_length -= increment;
     if(a.active_length>0) a.active_edge += increment;
-    else a.active_edge = 0;
+    else{ 
+      a.active_edge = 0;
+      return;
+    }
+    if (active_edge().end_index == CURRENT_END) return;
     assert(a.active_edge >= 0);
-    end = active_edge().end_index==CURRENT_END?text.size()-1:active_edge().end_index;
   }
 }
 
 
 
-
+#ifndef UKKONEN
 
 void suffix_tree::naive_construction()
 {
@@ -260,3 +271,4 @@ void suffix_tree::walk_tree(const string& suffix)
     show();
   }
 }
+#endif
