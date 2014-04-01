@@ -39,9 +39,8 @@ class suffix_tree{
   active_point a;
 //private methods for tree construction
   void add_leaf_node(int);
-  int split_edge(edge&,int,int);
+  int split_edge(edge&,int,int,int);
   bool suffix_already_exists(int);
-  bool suffix_is_implicit(int);
   char active_point_character();
 //convenience functions to use the active point
   edge& active_edge();

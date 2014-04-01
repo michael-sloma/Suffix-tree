@@ -35,7 +35,7 @@ edge::edge(int start,int end,int origin,int destination)
 }
 
 //node class
-node::node() : suffix_link(-1){}
+node::node() : value(-1),suffix_link(-1){}
 
 //active point class
 active_point::active_point()
@@ -66,12 +66,14 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
     while(!suffix_already_exists(i)){
       if(a.active_edge==0){
         add_leaf_node(i);
+        remainder -= 1;
       }
       else{
         last_inserted = new_inserted;
         new_inserted = split_edge(active_edge(),
                                    active_edge().start_index+a.active_length,
-                                   i);
+                                   i,i-remainder+1);
+        remainder -= 1;
         if(!first){ //rule 2
           nodes[last_inserted].suffix_link = new_inserted;
         }
@@ -87,15 +89,11 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
         first = false;
       }
     }
+    remainder += 1;
   }//end main loop
 #else
   naive_construction();
 #endif
-}
-
-bool suffix_tree::suffix_is_implicit(int position)
-{
- return false;
 }
 
 void suffix_tree::show()
@@ -112,6 +110,7 @@ void suffix_tree::show()
         cout<<it->first<<" "<<text.substr(start,end-start+1);
         if(it->second.end_index != CURRENT_END)//edge does not point to leaf node
           cout<<" -> "<<it->second.destination_node;
+        else cout <<"("<<nodes[it->second.destination_node].value<<")";
         cout<<std::endl;
       }
     } 
@@ -132,9 +131,10 @@ void suffix_tree::add_leaf_node(int position)//add a new leaf node to the active
                                       text[position],
                                       edge(position,CURRENT_END,
                                            a.active_node,nodes.size()-1)));
+  nodes[nodes.size()-1].value = position;//add index where the suffix represented by this leaf started
 }
 
-int suffix_tree::split_edge(edge& e,int position_to_split,int current_position)
+int suffix_tree::split_edge(edge& e,int position_to_split,int current_position,int suffix_start)
 {
   nodes.push_back(node());//make a new internal node
   edge old_edge = e;
@@ -152,7 +152,7 @@ int suffix_tree::split_edge(edge& e,int position_to_split,int current_position)
                                       text[current_position],
                                       edge(current_position,old_edge.end_index,
                                            nodes.size()-2,nodes.size()-1)));
-  
+  nodes[nodes.size()-1].value = suffix_start;
 
 //  nodes[a.active_node].edges.insert(std::make_pair(a.active_edge,edge(e.start_index,position_to_split,e.origin_node,nodes.size()-1)));//add an edge from active node to internal node 
   return nodes.size()-2;//the address of the internal node
