@@ -50,7 +50,6 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
 {
   nodes.push_back(node());//the root node
 #ifdef UKKONEN
-  cout <<"UKKOKONEN\n";
   int remainder = 1;
 // -- main loop of algorithm -- 
   for(unsigned int i=1;i<text.length()-1;i++){
@@ -75,7 +74,6 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
                                    i);
         if(!first){ //rule 2
           nodes[last_inserted].suffix_link = new_inserted;
-          cout<<"Setting suffix link of node "<<last_inserted<<" to "<<new_inserted<<std::endl;
         }
         if(a.active_node==0 && a.active_length > 0){//rule 1
           a.active_length -= 1;
@@ -138,8 +136,6 @@ void suffix_tree::add_leaf_node(int position)//add a new leaf node to the active
 
 int suffix_tree::split_edge(edge& e,int position_to_split,int current_position)
 {
-  cout<<"splitting edge "<<e.origin_node<<"->"<<e.destination_node<<"("<<text.substr(e.start_index,e.end_index-e.start_index+1)<<") at location "<<position_to_split<<std::endl;
-  cout<<"current position "<< current_position<<" \n";
   nodes.push_back(node());//make a new internal node
   edge old_edge = e;
   //edit the edge to be split to go from active node to new internal node
@@ -182,7 +178,6 @@ void suffix_tree::canonize()
   if (a.active_edge==0)return;
   if (active_edge().end_index == CURRENT_END) return;
   while(active_edge().start_index+a.active_length > active_edge().end_index){//maybe should be >=
-    cout<<"we canonized something!\n";
     int increment = active_edge().end_index - active_edge().start_index+1;
     a.active_node = active_edge().destination_node;
     a.active_length -= increment;
