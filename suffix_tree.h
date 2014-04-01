@@ -34,7 +34,6 @@ class suffix_tree{
   void show();
  private:
   std::vector<node> nodes;
-//  std::unordered_map<edge_key,edge> edges;
   const std::string text;
   active_point a;
 //private methods for tree construction

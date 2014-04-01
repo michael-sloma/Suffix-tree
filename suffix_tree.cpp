@@ -32,6 +32,7 @@ edge::edge(int start,int end,int origin,int destination)
   end_index = end;
   origin_node = origin;
   destination_node = destination;
+  if(end_index != CURRENT_END) assert(end_index >= start_index);
 }
 
 //node class
@@ -146,7 +147,7 @@ int suffix_tree::split_edge(edge& e,int position_to_split,int current_position,i
   nodes.push_back(node());
   nodes[nodes.size()-2].edges.insert(std::make_pair(
                                       text[current_position],
-                                      edge(current_position,old_edge.end_index,
+                                      edge(current_position,CURRENT_END,
                                            nodes.size()-2,nodes.size()-1)));
   nodes[nodes.size()-1].value = suffix_start;
   return nodes.size()-2;//the address of the internal node
@@ -168,7 +169,7 @@ char suffix_tree::active_point_character()//character immediately AFTER the acti
 }
 
 void suffix_tree::canonize()
-{
+{//fixes the active point when active_length grows beyond the bounds of the active_edge
   if (a.active_edge==0)return;
   if (active_edge().end_index == CURRENT_END) return;
   while(active_edge().start_index+a.active_length > active_edge().end_index){//maybe should be >=
@@ -180,7 +181,8 @@ void suffix_tree::canonize()
       a.active_edge = 0;
       return;
     }
-    if (active_edge().end_index == CURRENT_END) return;
+    if (a.active_edge != 0) 
+      if( active_edge().end_index == CURRENT_END) return;
     assert(a.active_edge >= 0);
   }
 }
