@@ -46,11 +46,6 @@ class suffix_tree{
   edge& active_edge();
   node& active_node();
   void canonize();
-
-//these construct a tree using the naive O(N^2) algorithm
-  void naive_construction();
-  void walk_tree(const std::string&);
-
 };
 
 #endif

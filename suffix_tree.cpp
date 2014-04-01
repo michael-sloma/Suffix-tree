@@ -49,7 +49,6 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
                                                  a(active_point())
 {
   nodes.push_back(node());//the root node
-#ifdef UKKONEN
   int remainder = 1;
 // -- main loop of algorithm -- 
   for(unsigned int i=1;i<text.length()-1;i++){
@@ -91,9 +90,6 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
     }
     remainder += 1;
   }//end main loop
-#else
-  naive_construction();
-#endif
 }
 
 void suffix_tree::show()
@@ -153,8 +149,6 @@ int suffix_tree::split_edge(edge& e,int position_to_split,int current_position,i
                                       edge(current_position,old_edge.end_index,
                                            nodes.size()-2,nodes.size()-1)));
   nodes[nodes.size()-1].value = suffix_start;
-
-//  nodes[a.active_node].edges.insert(std::make_pair(a.active_edge,edge(e.start_index,position_to_split,e.origin_node,nodes.size()-1)));//add an edge from active node to internal node 
   return nodes.size()-2;//the address of the internal node
 }
 
@@ -193,77 +187,3 @@ void suffix_tree::canonize()
 
 
 
-#ifndef UKKONEN
-
-void suffix_tree::naive_construction()
-{
-  cout << "performing naive construction of suffix tree\n";
-  nodes.push_back(node());
-  nodes[0].edges.insert(std::make_pair(text[1],edge(1,text.size()-1,0,1)));
-  for(unsigned int i=2;i<text.size();i++){
-    string suffix = string(" ")+text.substr(i);
-    walk_tree(suffix);
-  }
-}
-
-void suffix_tree::walk_tree(const string& suffix)
-{
-  a = active_point();
-  int end_point=-1;
-  int final_i=text.size()-1;
-  for(int i = 1;i<(int)suffix.size()-1;i++){
-    final_i = text.size()-1;
-    char test_char = suffix[i];
-    cout<<"looking for "<<test_char<<"\n";
-    if(a.active_edge==0){//if we're at a node, jump on an edge if possible
-      bool edge_found = nodes[a.active_node].edges.count(test_char);
-      if (nodes[a.active_node].edges.count(test_char)>0){
-        show();
-        a.active_edge = i;
-        cout<<"set active edge to "<<i<<"\n";
-      }
-      else{ //if there's no matching edge at the start, make a new edge from root
-//        nodes.push_back(node());
-//        nodes[a.active_node].edges.insert(std::make_pair(text[text.size()-suffix.size()],
-//                                            edge(text.size()-suffix.size(),
-//                                            text.size()-1,a.active_node,nodes.size()-1)));
-        end_point = i;
-        break;
-      }
-    }
-    cout<<"active point is " <<active_point_character()<<"\n";
-    if(active_point_character() != test_char)
-      cout<<"mismatched suffix!\n";
-      cout<<active_point_character();
-      end_point = a.active_length;
-      final_i = i;
-      break;
-    if(i < nodes[a.active_node].edges.at(a.active_edge).end_index){
-      a.active_length += 1;
-    }
-    else{
-      a.active_node = nodes[a.active_node].edges.at(a.active_edge).destination_node;
-      a.active_edge = 0;
-      a.active_length = 0;
-    }
-  }
-  if(a.active_edge==0){
-    cout<<"adding edge starting with "<<text[text.size()-suffix.size()+end_point]<<"\n";
-    nodes.push_back(node());
-    nodes[a.active_node].edges.insert(std::make_pair(text[text.size()-suffix.size()+end_point],
-                                        edge(text.size()-suffix.size()+end_point,
-                                        text.size()-1,a.active_node,nodes.size()-1)));
-  }else{
-    cout<<"edge split, final i "<<final_i<< " "<<text.size()<<" "<<suffix.size()<<"\n";
-    cout<<suffix<<std::endl;
-    cout<<"tree before split:\n";
-    show();
-    split_edge(nodes[a.active_node].edges.at(text[a.active_edge]),
-               nodes[a.active_node].edges.at(text[a.active_edge]).start_index+end_point,
-               final_i+text.size()-suffix.size()+1 
-               );
-    cout<<"tree after split:\n";
-    show();
-  }
-}
-#endif
