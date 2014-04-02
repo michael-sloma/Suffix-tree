@@ -81,7 +81,7 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
 //  to the last internal node that got a leaf added (rule 2)
 //insert a leaf node directly if active point is at a node. 
       if(a.active_edge==0){
-        add_leaf_node(i);
+        add_leaf_node(i,remainder);
         if(a.active_node !=0){
           last_inserted = new_inserted;
           new_inserted = a.active_node;
@@ -148,14 +148,14 @@ bool suffix_tree::suffix_already_exists(int i)
 }
 
 
-int suffix_tree::add_leaf_node(int position)//add a new leaf node to the active node
+int suffix_tree::add_leaf_node(int position,int remainder)//add a new leaf node to the active node
 {
   nodes.push_back(node());
   nodes[a.active_node].edges.insert(std::make_pair(
                                       text[position],
                                       edge(position,CURRENT_END,
                                            a.active_node,nodes.size()-1)));
-  nodes[nodes.size()-1].value = position;//add index where the suffix represented by this leaf started
+  nodes[nodes.size()-1].value = position-remainder+1;//add index where the suffix represented by this leaf started
   return nodes.size()-1;
 }
 

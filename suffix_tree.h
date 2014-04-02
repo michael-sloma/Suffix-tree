@@ -38,7 +38,7 @@ class suffix_tree{
   const std::string text;
   active_point a;
 //private methods for tree construction
-  int add_leaf_node(int);
+  int add_leaf_node(int,int);
   int split_edge(edge&,int,int,int);
   bool suffix_already_exists(int);
   char active_point_character();
