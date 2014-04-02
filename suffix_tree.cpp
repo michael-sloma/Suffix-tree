@@ -231,6 +231,7 @@ int suffix_tree::search_for_substring(const string& query)
   else return nodes[a.active_node].edges.at(a.active_edge).destination_node;
 }
 
+
 vector<int> suffix_tree::find_leaves(int start)
 {
   std::stack<int>stack;
@@ -256,7 +257,6 @@ vector<int> suffix_tree::find_leaves(int start)
 void suffix_tree::find_all_substrings_matching(const string& query)
 {
   int subtree_root = search_for_substring(query);
-  cout << "subtree root: "<<subtree_root<<std::endl;
   if (subtree_root == -1) {
     cout << "no matches found!\n";
     return;
