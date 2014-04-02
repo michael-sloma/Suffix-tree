@@ -1,6 +1,7 @@
 #include "suffix_tree.h"
 #include<iostream>
 #include<assert.h>
+#include<stack>
 using std::vector;
 using std::string;
 using std::cout;
@@ -35,6 +36,8 @@ edge::edge(int start,int end,int origin,int destination)
   if(end_index != CURRENT_END) assert(end_index >= start_index);
 }
 
+int edge::length(){ return end_index-start_index+1; }
+
 //node class
 node::node() : value(-1),suffix_link(-1){}
 
@@ -64,6 +67,9 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
 //if it does, move the active point up 1 and end current step
       if(suffix_already_exists(i)){
         assert(remainder>0);
+        if(a.active_node !=0 && !first){
+          nodes[new_inserted].suffix_link = a.active_node;
+        }
         if(a.active_edge==0) a.active_edge = i;
         a.active_length += 1;
         canonize();
@@ -209,5 +215,55 @@ void suffix_tree::canonize()
   }
 }
 
+//returns the root node of the sub-tree which represents all the suffixes of the query
+//or -1 if query not found
+int suffix_tree::search_for_substring(const string& query)
+{
+  a = active_point();
+  for(unsigned int i=0;i<query.size();i++){
+    if(a.active_edge==0){//we are on a node
+      if(nodes[a.active_node].edges.count(query[i])==0)
+        return -1;
+      else
+        a.active_edge = i;
+        a.active_length += 1;
+    }
+    else{//we are on an edge
+      if(!(query[i]==active_point_character())){
+        return -1;
+      }
+      else{
+        a.active_length += 1;
+      }
+    }
+//if we reached the end of an edge, hop to the node
+    if(a.active_length >= active_edge().end_index){
+      a.active_node = active_edge().destination_node;
+      a.active_length = a.active_edge = 0;
+    }
+  }
+  return a.active_node;
+}
+
+vector<int> suffix_tree::find_leaves(int start)
+{
+  std::stack<int>stack;
+  vector<int>values;
+  stack.push(start);
+  while(!stack.empty()){
+    int current_node =  stack.top();
+    stack.pop();
+//if node is a leaf, save its start position
+    if(nodes[current_node].edges.empty()){
+      values.push_back(nodes[current_node].value);
+      assert(nodes[current_node].value > 0);//sanity check
+    }
+//otherwise, put its children on the stack
+    for (auto it=nodes[current_node].edges.begin();it!=nodes[current_node].edges.end();++it){
+        stack.push(it->second.destination_node);
+    }
+  }
+  return values;
+}
 
 

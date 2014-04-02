@@ -12,6 +12,7 @@ class edge{
   edge(int,int,int,int);
   int start_index,end_index;
   int origin_node, destination_node;
+  int length();
 };
 
 class node{
@@ -41,10 +42,14 @@ class suffix_tree{
   int split_edge(edge&,int,int,int);
   bool suffix_already_exists(int);
   char active_point_character();
-//convenience functions to use the active point
+//functions to use the active point
   edge& active_edge();
   node& active_node();
   void canonize();
+//functions to search in the tree
+  void find_all_substrings_matching(const std::string& query);
+  int search_for_substring(const std::string& query);
+  std::vector<int> find_leaves(int);
 };
 
 #endif
