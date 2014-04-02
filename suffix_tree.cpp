@@ -50,46 +50,67 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
                                                  a(active_point())
 {
   nodes.push_back(node());//the root node
-  int remainder = 1;
+  int remainder = 0;
 // -- main loop of algorithm -- 
-  for(unsigned int i=1;i<text.length()-1;i++){
-    if(suffix_already_exists(i)){
-      remainder += 1;
-      if(a.active_edge==0) a.active_edge = i;
-      a.active_length += 1;
-      canonize();
-      continue;
-    }
+  for(unsigned int i=1;i<text.length();i++){
+    remainder += 1;
     int last_inserted = -1;
     int new_inserted = -1;
     bool first = true;
-    while(!suffix_already_exists(i)){
+//try to add suffixes while there's still suffixes to add at the current position i in the string
+    while(remainder>0){
+//check if the suffix is already contained in the tree implicitly by checking if the new character
+//appears immediately after the active point. 
+//if it does, move the active point up 1 and end current step
+      if(suffix_already_exists(i)){
+        assert(remainder>0);
+        if(a.active_edge==0) a.active_edge = i;
+        a.active_length += 1;
+        canonize();
+        break;
+      }
+//if we get to here, we didn't find the suffix so it's time to update the tree.
+//  we add a new leaf to the tree
+//if the leaf is added to an internal node, the internal node gets a suffix link
+//  to the last internal node that got a leaf added (rule 2)
+//insert a leaf node directly if active point is at a node. 
       if(a.active_edge==0){
         add_leaf_node(i);
-        remainder -= 1;
+        if(a.active_node !=0){
+          last_inserted = new_inserted;
+          new_inserted = a.active_node;
+          if(!first){ //rule 2
+            nodes[last_inserted].suffix_link = a.active_node;
+          }
+        }
       }
+//if the active point is on an edge, split the edge and add a leaf to the new internal node
       else{
+        assert(a.active_edge!=0 && a.active_length>0);//sanity check
         last_inserted = new_inserted;
         new_inserted = split_edge(active_edge(),
                                    active_edge().start_index+a.active_length,
                                    i,i-remainder+1);
-        remainder -= 1;
         if(!first){ //rule 2
           nodes[last_inserted].suffix_link = new_inserted;
         }
-        if(a.active_node==0 && a.active_length > 0){//rule 1
-          a.active_length -= 1;
-          if (a.active_length == 0) a.active_edge = 0;
-          else a.active_edge += 1;
-        }
-        if(a.active_node != 0){//rule 3
-          a.active_node = active_node().suffix_link==-1?0:active_node().suffix_link;
-          canonize();
-        }
-        first = false;
       }
+//now that we've added a new node, move the active point to the next shorter suffix
+//if we're at root, this is done by decrementing active length (rule 1)
+//we we're at a non-root node, this is done by following a suffix link (rule 3)
+      if(a.active_node==0 && a.active_length > 0){//rule 1
+        a.active_length -= 1;
+        if (a.active_length == 0) a.active_edge = 0;
+        else a.active_edge += 1;
+        canonize();
+      }
+      else if(a.active_node!=0){//rule 3
+        a.active_node = active_node().suffix_link==-1?0:active_node().suffix_link;
+        canonize();
+      }
+      first = false;
+      remainder -= 1;
     }
-    remainder += 1;
   }//end main loop
 }
 
@@ -121,7 +142,7 @@ bool suffix_tree::suffix_already_exists(int i)
 }
 
 
-void suffix_tree::add_leaf_node(int position)//add a new leaf node to the active node
+int suffix_tree::add_leaf_node(int position)//add a new leaf node to the active node
 {
   nodes.push_back(node());
   nodes[a.active_node].edges.insert(std::make_pair(
@@ -129,6 +150,7 @@ void suffix_tree::add_leaf_node(int position)//add a new leaf node to the active
                                       edge(position,CURRENT_END,
                                            a.active_node,nodes.size()-1)));
   nodes[nodes.size()-1].value = position;//add index where the suffix represented by this leaf started
+  return nodes.size()-1;
 }
 
 int suffix_tree::split_edge(edge& e,int position_to_split,int current_position,int suffix_start)
