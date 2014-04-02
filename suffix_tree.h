@@ -33,6 +33,10 @@ class suffix_tree{
  public:
   suffix_tree(const std::string&);
   void show();
+//functions to search in the tree
+  void find_all_substrings_matching(const std::string& query);
+  int search_for_substring(const std::string& query);
+  std::vector<int> find_leaves(int);
  private:
   std::vector<node> nodes;
   const std::string text;
@@ -46,10 +50,6 @@ class suffix_tree{
   edge& active_edge();
   node& active_node();
   void canonize();
-//functions to search in the tree
-  void find_all_substrings_matching(const std::string& query);
-  int search_for_substring(const std::string& query);
-  std::vector<int> find_leaves(int);
 };
 
 #endif

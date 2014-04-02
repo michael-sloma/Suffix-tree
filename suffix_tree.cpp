@@ -5,27 +5,6 @@
 using std::vector;
 using std::string;
 using std::cout;
-/*
-THE RULES:
-
-Rule 1
-    If after an insertion from the active node = root, the active length is greater than 0, then:
-
-        active node is not changed
-        active length is decremented
-        active edge is shifted right (to the first character of the next suffix we must insert)
-
-Rule 2
-    If we create a new internal node OR make an inserter from an internal node, 
-    and this is not the first SUCH internal node at current step, then we link 
-    the previous SUCH node with THIS one through a suffix link.
-
-Rule 3
-    After an insert from the active node which is not the root node, we must 
-    follow the suffix link and set the active node to the node it points to. 
-    If there is no a suffix link, set the active node to the root node. Either 
-    way, active edge and active length stay unchanged.
-*/
 
 edge::edge(int start,int end,int origin,int destination)
 {
@@ -49,6 +28,10 @@ active_point::active_point()
   active_edge = 0;
 }
 
+/*
+    this constructor for the suffix tree uses ukkonen's algorithm to create the tree
+    in linear time with respect to the sequence length
+*/
 suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+string("$"))),
                                                  a(active_point())
 {
@@ -215,12 +198,13 @@ void suffix_tree::canonize()
   }
 }
 
+
 //returns the root node of the sub-tree which represents all the suffixes of the query
 //or -1 if query not found
 int suffix_tree::search_for_substring(const string& query)
 {
   a = active_point();
-  for(unsigned int i=0;i<query.size();i++){
+  for(unsigned int i=1;i<query.size();i++){
     if(a.active_edge==0){//we are on a node
       if(nodes[a.active_node].edges.count(query[i])==0)
         return -1;
@@ -229,7 +213,8 @@ int suffix_tree::search_for_substring(const string& query)
         a.active_length += 1;
     }
     else{//we are on an edge
-      if(!(query[i]==active_point_character())){
+      if(!(query[i]==text[nodes[a.active_node].edges.at(query[a.active_edge])
+                                              .start_index+a.active_length])){
         return -1;
       }
       else{
@@ -237,12 +222,13 @@ int suffix_tree::search_for_substring(const string& query)
       }
     }
 //if we reached the end of an edge, hop to the node
-    if(a.active_length >= active_edge().end_index){
-      a.active_node = active_edge().destination_node;
+    if(a.active_length >= nodes[a.active_node].edges.at(query[a.active_edge]).length()){
+      a.active_node = nodes[a.active_node].edges.at(query[a.active_edge]).destination_node;
       a.active_length = a.active_edge = 0;
     }
   }
-  return a.active_node;
+  if (a.active_edge==0) return a.active_node;
+  else return nodes[a.active_node].edges.at(a.active_edge).destination_node;
 }
 
 vector<int> suffix_tree::find_leaves(int start)
@@ -255,8 +241,8 @@ vector<int> suffix_tree::find_leaves(int start)
     stack.pop();
 //if node is a leaf, save its start position
     if(nodes[current_node].edges.empty()){
+      assert(nodes[current_node].value > 0);//if its a leaf it has a positive value
       values.push_back(nodes[current_node].value);
-      assert(nodes[current_node].value > 0);//sanity check
     }
 //otherwise, put its children on the stack
     for (auto it=nodes[current_node].edges.begin();it!=nodes[current_node].edges.end();++it){
@@ -267,3 +253,17 @@ vector<int> suffix_tree::find_leaves(int start)
 }
 
 
+void suffix_tree::find_all_substrings_matching(const string& query)
+{
+  int subtree_root = search_for_substring(query);
+  cout << "subtree root: "<<subtree_root<<std::endl;
+  if (subtree_root == -1) {
+    cout << "no matches found!\n";
+    return;
+  }
+  vector<int> start_positions = find_leaves(subtree_root);
+  cout << "start positions of query string "<<query.substr(1)<<":\n";
+  for(int p : start_positions){
+    cout << p << std::endl;
+  }
+}
