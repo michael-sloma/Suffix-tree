@@ -2,6 +2,7 @@
 #include<iostream>
 #include<assert.h>
 #include<stack>
+#include <algorithm>
 using std::vector;
 using std::string;
 using std::cout;
@@ -48,8 +49,9 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
 //check if the suffix is already contained in the tree implicitly by checking if the new character
 //appears immediately after the active point. 
 //if it does, move the active point up 1 and end current step
+//if there was already an internal node marked this step as 
+//needing a suffix link, link it to the active node
       if(suffix_already_exists(i)){
-        assert(remainder>0);
         if(a.active_node !=0 && !first){
           nodes[new_inserted].suffix_link = a.active_node;
         }
@@ -161,7 +163,7 @@ int suffix_tree::split_edge(edge& e,int position_to_split,int current_position,i
                                       edge(current_position,CURRENT_END,
                                            nodes.size()-2,nodes.size()-1)));
   nodes[nodes.size()-1].value = suffix_start;
-  return nodes.size()-2;//the address of the internal node
+  return e.destination_node;//the address of the internal node
 }
 
 edge& suffix_tree::active_edge(){
@@ -233,16 +235,18 @@ int suffix_tree::search_for_substring(const string& query)
 
 
 vector<int> suffix_tree::find_leaves(int start)
-{
+{//once we locate the root of the subtree which contains suffixes of the query
+//traverse the sub tree to find the leaves 
+//their labels give the positions of the query in the full string
   std::stack<int>stack;
   vector<int>values;
   stack.push(start);
   while(!stack.empty()){
     int current_node =  stack.top();
     stack.pop();
-//if node is a leaf, save its start position
+//if node has no children it is a leaf. save its start position.
     if(nodes[current_node].edges.empty()){
-      assert(nodes[current_node].value > 0);//if its a leaf it has a positive value
+      assert(nodes[current_node].value > 0);//sanity check, if its a leaf it has a positive value
       values.push_back(nodes[current_node].value);
     }
 //otherwise, put its children on the stack
@@ -262,6 +266,7 @@ void suffix_tree::find_all_substrings_matching(const string& query)
     return;
   }
   vector<int> start_positions = find_leaves(subtree_root);
+  std::sort(start_positions.begin(),start_positions.end());
   cout << "start positions of query string "<<query.substr(1)<<":\n";
   for(int p : start_positions){
     cout << p << std::endl;
