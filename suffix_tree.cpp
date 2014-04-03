@@ -104,7 +104,7 @@ suffix_tree::suffix_tree(const std::string& s) : text(string(string(" ")+s+strin
 }
 
 void suffix_tree::show()
-{
+{//print a representation of the suffix tree for debugging
   for(unsigned int i=0;i<nodes.size();i++){
     if(!nodes[i].edges.empty()){ 
       cout<<"node "<<i;
