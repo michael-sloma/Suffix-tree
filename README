@@ -1,0 +1,7 @@
+This program will search for every instance of a substring in a larger text.
+Usage: substring <query string>
+The text should be provided from standard in
+ Example:
+    $echo mississippi | substring ssi 
+to search for all instances of 'ssi' in 'mississippi'
+
