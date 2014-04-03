@@ -5,3 +5,65 @@ The text should be provided from standard in
     $echo mississippi | substring ssi 
 to search for all instances of 'ssi' in 'mississippi'
 
+I have also included a version of the mycobacterium tuberculosis genome with 
+the comments, whitespace, numbers, and line breaks stripped out for use by 
+this program ("Mtuberculosis.txt")
+
+To find all instances of "tggccggtgc" in Mycobacterium tuberculosis genome:
+
+    $substring tggccggtgc < Mtuberculosis.txt 
+Output:
+
+    start positions of query string tggccggtgc:
+    3063774
+    2333497
+    3610077
+    3941061
+    2699744
+    1487195
+    1890211
+    997299
+    2179808
+    1946350
+    444880
+    3080490
+    748682
+    1395365
+    2225226
+    135100
+    869564
+    1458635
+    4034965
+    501238
+    2116221
+    1305188
+    102735
+    326453
+    117937
+    4059266
+    669675
+    216326
+    1509927
+    2054264
+    355045
+    218868
+    3496935
+    3064738
+    772541
+    780977
+    2241324
+    2658962
+    1887392
+    413568
+    710442
+    3453739
+    2308795
+    3197379
+    2597121
+    1630957
+    3095283
+    1369943
+    3112640
+    3991694
+    430347
+
