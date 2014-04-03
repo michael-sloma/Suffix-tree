@@ -13,7 +13,7 @@ edge::edge(int start,int end,int origin,int destination)
   end_index = end;
   origin_node = origin;
   destination_node = destination;
-  if(end_index != CURRENT_END) assert(end_index >= start_index);
+  if(end_index != CURRENT_END) assert(end_index >= start_index);//sanity check
 }
 
 int edge::length(){ return end_index-start_index+1; }
@@ -22,7 +22,8 @@ int edge::length(){ return end_index-start_index+1; }
 node::node() : value(-1),suffix_link(-1){}
 
 //active point class
-active_point::active_point()
+//uses three ints to represent a particular point on the growing tree
+active_point::active_point() 
 {
   active_node = 0;
   active_length = 0;
